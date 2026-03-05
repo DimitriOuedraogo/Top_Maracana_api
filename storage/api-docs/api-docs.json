@@ -1,0 +1,1818 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Top Maracana API",
+        "description": "Documentation de l'API Top Maracana",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api"
+        }
+    ],
+    "paths": {
+        "/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Inscription d'un nouvel utilisateur",
+                "operationId": "ed42f392010c301892e640067141676e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Dimitri Ouedraogo"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "organizer",
+                                            "team_manager"
+                                        ],
+                                        "example": "organizer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Inscription réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Inscription réussie. Vérifiez votre email."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Connexion d'un utilisateur",
+                "operationId": "8cb7742ae98d0990acb2907c4e00bf24",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants incorrects"
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Déconnexion de l'utilisateur connecté",
+                "operationId": "0d29c740dc06d77602af8095bf4654cc",
+                "responses": {
+                    "200": {
+                        "description": "Déconnexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Déconnexion réussie."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Rafraîchir le token JWT",
+                "operationId": "f6c9683ed975ace7d035a09e6e2a9332",
+                "responses": {
+                    "200": {
+                        "description": "Token rafraîchi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "example": "bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "integer",
+                                            "example": 3600
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Récupérer les informations de l'utilisateur connecté",
+                "operationId": "a9c495788506b114956e3f509e5d90a2",
+                "responses": {
+                    "200": {
+                        "description": "Informations utilisateur",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "user": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Dimitri Ouedraogo"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "dimitri@test.com"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "example": "organizer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/auth/verify-email": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Vérifier l'email avec le code OTP",
+                "operationId": "f850270928d7b6849e4357b866318987",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email vérifié avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Email vérifié avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Code invalide ou expiré"
+                    }
+                }
+            }
+        },
+        "/auth/resend-verification": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Renvoyer le code OTP de vérification",
+                "operationId": "326a3f4523dbd57a5ef77a023d4caadb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code renvoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Code renvoyé avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur introuvable"
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Demander un code OTP de réinitialisation du mot de passe",
+                "operationId": "b13d5efc90e1de6d4e9900240fce9b4d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code envoyé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Code de réinitialisation envoyé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur introuvable"
+                    }
+                }
+            }
+        },
+        "/auth/verify-reset-code": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Vérifier le code OTP avant la réinitialisation du mot de passe",
+                "operationId": "58f77f348b39ab3f2a94643c769e6dbe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code valide",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Code valide."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Code invalide ou expiré"
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Réinitialiser le mot de passe avec le code OTP",
+                "operationId": "bbf02faac4cfbb998aad2b63a843b88c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "code",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dimitri@test.com"
+                                    },
+                                    "code": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Mot de passe réinitialisé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Mot de passe réinitialisé avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Code invalide ou expiré"
+                    }
+                }
+            }
+        },
+        "/competitions": {
+            "get": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Lister toutes les compétitions publiques",
+                "operationId": "5745adf0e6a72bffacfb3bc5ea52d7e4",
+                "responses": {
+                    "200": {
+                        "description": "Liste des compétitions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competitions": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Tournoi Maracana"
+                                                            },
+                                                            "location": {
+                                                                "type": "string",
+                                                                "example": "Ouagadougou"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "registration_open"
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "example": "2026-03-15"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "example": "2026-03-25"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Créer une nouvelle compétition",
+                "operationId": "2c7a8ef1b623d697b29d901341e6a171",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "location",
+                                    "start_date",
+                                    "end_date",
+                                    "max_teams",
+                                    "players_per_team"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tournoi Maracana"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Ouagadougou"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-15"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-25"
+                                    },
+                                    "max_teams": {
+                                        "type": "integer",
+                                        "example": 8
+                                    },
+                                    "players_per_team": {
+                                        "type": "integer",
+                                        "example": 11
+                                    },
+                                    "registration_fee": {
+                                        "type": "number",
+                                        "example": 5000
+                                    },
+                                    "prize_description": {
+                                        "type": "string",
+                                        "example": "Trophée + 500 000 FCFA"
+                                    },
+                                    "age_min": {
+                                        "type": "integer",
+                                        "example": 18
+                                    },
+                                    "age_max": {
+                                        "type": "integer",
+                                        "example": 40
+                                    },
+                                    "poster_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Compétition créée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competition": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Tournoi Maracana"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "registration_open"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/competitions/my": {
+            "get": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Lister les compétitions de l'organisateur connecté",
+                "operationId": "b2db4c1a55c6d08a06f5cd79ffdfa2a9",
+                "responses": {
+                    "200": {
+                        "description": "Mes compétitions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competitions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Tournoi Maracana"
+                                                    },
+                                                    "status": {
+                                                        "type": "string",
+                                                        "example": "registration_open"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/competitions/{id}": {
+            "get": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Afficher le détail d'une compétition",
+                "operationId": "b35597922467ab76e0aa714879db5571",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de la compétition",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail de la compétition",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competition": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Tournoi Maracana"
+                                                },
+                                                "location": {
+                                                    "type": "string",
+                                                    "example": "Ouagadougou"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "registration_open"
+                                                },
+                                                "start_date": {
+                                                    "type": "string",
+                                                    "example": "2026-03-15"
+                                                },
+                                                "end_date": {
+                                                    "type": "string",
+                                                    "example": "2026-03-25"
+                                                },
+                                                "max_teams": {
+                                                    "type": "integer",
+                                                    "example": 8
+                                                },
+                                                "players_per_team": {
+                                                    "type": "integer",
+                                                    "example": 11
+                                                },
+                                                "registration_fee": {
+                                                    "type": "number",
+                                                    "example": 5000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Modifier une compétition",
+                "operationId": "85dd8c74f02e7e6957075c22037c63dc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de la compétition",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tournoi Maracana 2026"
+                                    },
+                                    "location": {
+                                        "type": "string",
+                                        "example": "Bobo-Dioulasso"
+                                    },
+                                    "start_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-15"
+                                    },
+                                    "end_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2026-03-25"
+                                    },
+                                    "max_teams": {
+                                        "type": "integer",
+                                        "example": 16
+                                    },
+                                    "players_per_team": {
+                                        "type": "integer",
+                                        "example": 11
+                                    },
+                                    "registration_fee": {
+                                        "type": "number",
+                                        "example": 5000
+                                    },
+                                    "prize_description": {
+                                        "type": "string",
+                                        "example": "Trophée + 500 000 FCFA"
+                                    },
+                                    "age_min": {
+                                        "type": "integer",
+                                        "example": 18
+                                    },
+                                    "age_max": {
+                                        "type": "integer",
+                                        "example": 40
+                                    },
+                                    "poster_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Compétition modifiée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competition": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Tournoi Maracana 2026"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Supprimer une compétition",
+                "operationId": "504c4ac98da31c1e2a2199952e4d2213",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de la compétition",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compétition supprimée avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Compétition supprimée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/competitions/{id}/groups": {
+            "get": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Groupes d'une compétition",
+                "operationId": "3630e750c02dec5f2add0f0fb2975f6c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Groupes de la compétition"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                }
+            }
+        },
+        "/api/competitions/{id}/matches": {
+            "get": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Matchs d'une compétition",
+                "operationId": "be12bebc719b793560f52519a1973d64",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Matchs de la compétition"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                }
+            }
+        },
+        "/api/groups": {
+            "get": {
+                "tags": [
+                    "Groupes"
+                ],
+                "summary": "Lister tous les groupes",
+                "operationId": "f286cbf34dc4be32a94459a335658168",
+                "responses": {
+                    "200": {
+                        "description": "Liste des groupes"
+                    }
+                }
+            }
+        },
+        "/api/groups/{id}": {
+            "get": {
+                "tags": [
+                    "Groupes"
+                ],
+                "summary": "Détail d'un groupe",
+                "operationId": "38a1f4990d0dc69ead7f7377ad016117",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du groupe"
+                    },
+                    "404": {
+                        "description": "Groupe introuvable"
+                    }
+                }
+            }
+        },
+        "/api/groups/{id}/matches": {
+            "get": {
+                "tags": [
+                    "Groupes"
+                ],
+                "summary": "Matchs d'un groupe",
+                "operationId": "fa95fd0ca9bd1100d8583c65c84872c9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Matchs du groupe"
+                    },
+                    "404": {
+                        "description": "Groupe introuvable"
+                    }
+                }
+            }
+        },
+        "/api/matches": {
+            "get": {
+                "tags": [
+                    "Matchs"
+                ],
+                "summary": "Lister tous les matchs",
+                "operationId": "57a216ed6c2e9c434e2007edd6790814",
+                "responses": {
+                    "200": {
+                        "description": "Liste des matchs"
+                    }
+                }
+            }
+        },
+        "/api/matches/{id}/goals": {
+            "post": {
+                "tags": [
+                    "Matchs"
+                ],
+                "summary": "Ajouter un but",
+                "operationId": "035e4e59666fff7c09af0cc86ca647ae",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "player_id"
+                                ],
+                                "properties": {
+                                    "player_id": {
+                                        "type": "string",
+                                        "example": "uuid-du-joueur"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "But ajouté avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur"
+                    },
+                    "404": {
+                        "description": "Match ou joueur introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/matches/{id}/cards": {
+            "post": {
+                "tags": [
+                    "Matchs"
+                ],
+                "summary": "Ajouter un carton",
+                "operationId": "2cba1bb083acec622de5352ba755a4a7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "player_id",
+                                    "card_type",
+                                    "minute"
+                                ],
+                                "properties": {
+                                    "player_id": {
+                                        "type": "string",
+                                        "example": "uuid-du-joueur"
+                                    },
+                                    "card_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "yellow",
+                                            "red"
+                                        ]
+                                    },
+                                    "minute": {
+                                        "type": "integer",
+                                        "example": 45
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Carton ajouté avec succès"
+                    },
+                    "400": {
+                        "description": "Erreur"
+                    },
+                    "404": {
+                        "description": "Match ou joueur introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/matches/{id}/close": {
+            "post": {
+                "tags": [
+                    "Matchs"
+                ],
+                "summary": "Clôturer un match",
+                "operationId": "645fd8404ace221f2b4a7f5d0a90109c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Match clôturé avec succès"
+                    },
+                    "400": {
+                        "description": "Match déjà clôturé"
+                    },
+                    "404": {
+                        "description": "Match introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/matches/{id}": {
+            "get": {
+                "tags": [
+                    "Matchs"
+                ],
+                "summary": "Détail d'un match",
+                "operationId": "496a55045627bb07d84440c12ba7f2b6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail du match"
+                    },
+                    "404": {
+                        "description": "Match introuvable"
+                    }
+                }
+            }
+        },
+        "/teams": {
+            "get": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Lister toutes les équipes",
+                "operationId": "f44e2fcbf1cbf47247272fa5e2632ecb",
+                "responses": {
+                    "200": {
+                        "description": "Liste des équipes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "teams": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Les Lions"
+                                                    },
+                                                    "logo": {
+                                                        "type": "string",
+                                                        "example": "teams/logos/logo.png"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Créer une équipe et s'inscrire à une compétition",
+                "operationId": "b86cd7af54a3695d92ddfbd0c2747e71",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "competition_id",
+                                    "name",
+                                    "players"
+                                ],
+                                "properties": {
+                                    "competition_id": {
+                                        "type": "string",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Les Lions"
+                                    },
+                                    "players": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "full_name": {
+                                                    "type": "string",
+                                                    "example": "Dimitri Ouedraogo"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "example": "2000-01-01"
+                                                },
+                                                "national_id_number": {
+                                                    "type": "string",
+                                                    "example": "BF123456"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Équipe créée et inscrite avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "team": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Les Lions"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Erreur de validation métier"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teams/my": {
+            "get": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Mes équipes",
+                "operationId": "32a03aa6e4439237b66a392eb9fc81b7",
+                "responses": {
+                    "200": {
+                        "description": "Mes équipes",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "teams": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Les Lions"
+                                                    },
+                                                    "competition": {
+                                                        "properties": {
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Tournoi Maracana"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/teams/{id}": {
+            "get": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Détail d'une équipe",
+                "operationId": "5f7cec6639feb6f6205ee6aeb30c1682",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de l'équipe",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détail de l'équipe",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "team": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Les Lions"
+                                                },
+                                                "players": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "full_name": {
+                                                                "type": "string",
+                                                                "example": "Dimitri Ouedraogo"
+                                                            },
+                                                            "birth_date": {
+                                                                "type": "string",
+                                                                "example": "2000-01-01"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Équipe introuvable"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Modifier une équipe",
+                "operationId": "1848fdd95dbe8d3acfdf43f6242c0b0a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de l'équipe",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Les Lions FC"
+                                    },
+                                    "players": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "full_name": {
+                                                    "type": "string",
+                                                    "example": "Dimitri Ouedraogo"
+                                                },
+                                                "birth_date": {
+                                                    "type": "string",
+                                                    "example": "2000-01-01"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Équipe modifiée avec succès"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Équipe introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Équipes"
+                ],
+                "summary": "Supprimer une équipe",
+                "operationId": "1d3e81060958eaef03b74307a982b913",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de l'équipe",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Équipe supprimée avec succès"
+                    },
+                    "401": {
+                        "description": "Non authentifié"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Équipe introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Compétitions",
+            "description": "Compétitions"
+        },
+        {
+            "name": "Groupes",
+            "description": "Groupes"
+        },
+        {
+            "name": "Matchs",
+            "description": "Matchs"
+        },
+        {
+            "name": "Équipes",
+            "description": "Équipes"
+        }
+    ]
+}

@@ -1,59 +1,100 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🏆 Top Maracana API
+API REST pour la gestion de tournois de football, développée avec Laravel 12 et JWT Authentication.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## 📋 Description
+Top Maracana est une application de gestion de compétitions de football. Elle permet à des organisateurs de créer et gérer des tournois, à des chefs d'équipe d'inscrire leurs équipes, et génère automatiquement les groupes (poules) et le programme des matchs une fois toutes les équipes inscrites.
 
-## About Laravel
+## ⚙️ Stack Technique
+TechnologieVersion
+PHP8.2
+Laravel12
+JWT Authtymon/jwt-auth
+Swaggerdarkaonline/l5-swagger
+Base de donnéesMySQL
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🚀 Fonctionnalités
+### 👤 Gestion des utilisateurs
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Inscription / Connexion avec JWT
+Vérification d'email
+Réinitialisation de mot de passe
+Rôles : Admin, Organisateur, Chef d'équipe
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 🏆 Gestion des compétitions
 
-## Learning Laravel
+Création / Modification / Suppression
+Configuration : nombre d'équipes (8, 16, 32), joueurs par équipe, frais d'inscription, tranche d'âge
+Jours et créneaux horaires disponibles
+Nombre de matchs par jour (1, 2 ou 3)
+Statuts : registration_open → full → ongoing → finished
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 👥 Gestion des équipes
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Création d'équipe liée à une compétition spécifique
+Vérification automatique de la tranche d'âge des joueurs
+Vérification du nombre de joueurs requis
+Upload de logo
 
-## Laravel Sponsors
+### 📝 Inscriptions automatiques
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Inscription automatiquement approuvée à la création de l'équipe
+Vérification des conditions d'inscription
+Déclenchement automatique de la génération des poules quand max_teams est atteint
 
-### Premium Partners
+### 🧩 Génération automatique des poules
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Déclenchée via un Event (CompetitionFull) dès que toutes les équipes sont inscrites
+Groupes de 4 équipes générés aléatoirement (Groupe A, Groupe B, ...)
+Algorithme Round Robin : chaque équipe joue contre toutes les autres du groupe
 
-## Contributing
+### 📅 Programme des matchs
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Génération automatique avec contraintes :
 
-## Code of Conduct
+✅ Une équipe ne joue pas deux fois le même jour
+✅ Une équipe ne joue pas deux jours consécutifs
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-## Security Vulnerabilities
+Organisation par semaine (Semaine 1, Semaine 2, ...)
+Attribution automatique des créneaux horaires
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### ⚽ Gestion des matchs
 
-## License
+Saisie des buts par joueur (réservé à l'organisateur)
+Saisie des cartons jaunes et rouges avec la minute
+Clôture du match avec calcul automatique :
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Score final
+Points (Victoire = 3pts, Nul = 1pt, Défaite = 0pt)
+Mise à jour du classement du groupe
+
+
+
+### 📊 Classement des groupes
+
+Mise à jour en temps réel après chaque match clôturé
+Critères : Points, Victoires, Nuls, Défaites, Buts marqués, Buts encaissés, Différence de buts
+
+### 🔧 Installation
+bash# Cloner le projet
+git clone https://github.com/DimitriOuedraogo/Top_Maracana_api.git
+cd top-maracana-api
+
+#### Installer les dépendances
+composer install
+
+#### Configurer l'environnement
+cp .env.example .env
+php artisan key:generate
+php artisan jwt:secret
+
+#### Configurer la base de données dans .env
+DB_DATABASE=top_maracana
+DB_USERNAME=root
+DB_PASSWORD=
+
+#### Lancer les migrations
+php artisan migrate
+
+#### Lancer le serveur
+php artisan serve

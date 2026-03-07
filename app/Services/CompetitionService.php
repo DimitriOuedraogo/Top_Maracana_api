@@ -130,4 +130,151 @@ class CompetitionService
     {
         return $file->store('competitions/posters', 'public');
     }
+
+    public function getKnockoutMatches(string $id): array
+    {
+        $competition = \App\Models\Competition::find($id);
+
+        if (!$competition) {
+            throw new \Exception('Compétition introuvable.', 404);
+        }
+
+        $matches = \App\Models\GameMatch::with(['homeTeam', 'awayTeam', 'result'])
+            ->where('competition_id', $id)
+            ->where('round_type', '!=', 'group')
+            ->orderBy('week_number')
+            ->orderBy('match_time')
+            ->get()
+            ->groupBy('round_type');
+
+        return [
+            'competition' => $competition->name,
+            'knockout' => $matches,
+        ];
+    }
+
+    public function getStatistics(string $id): array
+    {
+        $competition = \App\Models\Competition::with([
+            'groups.teams.players',
+            'matches.goals.player.team',
+            'matches.cards.player.team',
+        ])->find($id);
+
+        if (!$competition) {
+            throw new \Exception('Compétition introuvable.', 404);
+        }
+
+        // ── 1. Meilleur buteur ────────────────────────────────────
+        $topScorer = \App\Models\MatchGoal::whereHas('match', function ($q) use ($id) {
+            $q->where('competition_id', $id);
+        })
+            ->select('player_id', \DB::raw('COUNT(*) as goals'))
+            ->groupBy('player_id')
+            ->orderByDesc('goals')
+            ->first();
+
+        $topScorerData = null;
+        if ($topScorer) {
+            $player = \App\Models\Player::with('team')->find($topScorer->player_id);
+            $topScorerData = [
+                'player' => $player->full_name,
+                'team' => $player->team->name,
+                'goals' => $topScorer->goals,
+            ];
+        }
+
+        // ── 2. Meilleur joueur (buts × 3 - jaunes × 1 - rouges × 3) ──
+        $players = \App\Models\Player::whereHas('team', function ($q) use ($id) {
+            $q->where('competition_id', $id);
+        })->get();
+
+        $bestPlayerData = null;
+        $bestScore = null;
+
+        foreach ($players as $player) {
+            $goals = \App\Models\MatchGoal::whereHas('match', function ($q) use ($id) {
+                $q->where('competition_id', $id);
+            })
+                ->where('player_id', $player->id)
+                ->count();
+
+            $yellowCards = \App\Models\MatchCard::whereHas('match', function ($q) use ($id) {
+                $q->where('competition_id', $id);
+            })
+                ->where('player_id', $player->id)
+                ->where('card_type', 'yellow')
+                ->count();
+
+            $redCards = \App\Models\MatchCard::whereHas('match', function ($q) use ($id) {
+                $q->where('competition_id', $id);
+            })
+                ->where('player_id', $player->id)
+                ->where('card_type', 'red')
+                ->count();
+
+            $score = ($goals * 3) - ($yellowCards * 1) - ($redCards * 3);
+
+            if ($bestScore === null || $score > $bestScore) {
+                $bestScore = $score;
+                $bestPlayerData = [
+                    'player' => $player->full_name,
+                    'team' => $player->team->name,
+                    'goals' => $goals,
+                    'yellow_cards' => $yellowCards,
+                    'red_cards' => $redCards,
+                    'score' => $score,
+                ];
+            }
+        }
+
+        // ── 3. Meilleur gardien ───────────────────────────────────
+// Compter les buts encaissés par équipe sur TOUTE la compétition
+
+        $teams = \App\Models\Team::where('competition_id', $id)->get();
+
+        $bestGoalkeeperData = null;
+        $minGoalsAgainst = null;
+
+        foreach ($teams as $team) {
+            // Buts encaissés en tant qu'équipe domicile
+            $goalsAgainstHome = \App\Models\MatchResult::whereHas('match', function ($q) use ($id, $team) {
+                $q->where('competition_id', $id)
+                    ->where('home_team_id', $team->id)
+                    ->where('status', 'played');
+            })->sum('away_score');
+
+            // Buts encaissés en tant qu'équipe extérieure
+            $goalsAgainstAway = \App\Models\MatchResult::whereHas('match', function ($q) use ($id, $team) {
+                $q->where('competition_id', $id)
+                    ->where('away_team_id', $team->id)
+                    ->where('status', 'played');
+            })->sum('home_score');
+
+            $totalGoalsAgainst = $goalsAgainstHome + $goalsAgainstAway;
+
+            if ($minGoalsAgainst === null || $totalGoalsAgainst < $minGoalsAgainst) {
+                $minGoalsAgainst = $totalGoalsAgainst;
+
+                $goalkeeper = \App\Models\Player::where('team_id', $team->id)
+                    ->where('is_goalkeeper', true)
+                    ->first();
+
+                if ($goalkeeper) {
+                    $bestGoalkeeperData = [
+                        'player' => $goalkeeper->full_name,
+                        'team' => $team->name,
+                        'goals_against' => $totalGoalsAgainst,
+                    ];
+                }
+            }
+        }
+        return [
+            'competition' => $competition->name,
+            'top_scorer' => $topScorerData,
+            'best_player' => $bestPlayerData,
+            'best_goalkeeper' => $bestGoalkeeperData,
+        ];
+    }
+
 }

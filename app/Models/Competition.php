@@ -32,6 +32,10 @@ class Competition extends Model
         'status',
         'is_verified',
         'matches_per_day',
+        'winner_id',
+        'top_scorer_id',
+        'best_player_id',
+        'best_goalkeeper_id',
     ];
 
     protected $casts = [
@@ -82,5 +86,24 @@ class Competition extends Model
         return $this->hasMany(GameMatch::class);
     }
 
+    public function winner(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'winner_id');
+    }
+
+    public function topScorer(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'top_scorer_id');
+    }
+
+    public function bestPlayer(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'best_player_id');
+    }
+
+    public function bestGoalkeeper(): BelongsTo
+    {
+        return $this->belongsTo(Player::class, 'best_goalkeeper_id');
+    }
 
 }

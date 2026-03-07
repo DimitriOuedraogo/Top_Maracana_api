@@ -12,6 +12,7 @@ class AddGoalRequest extends FormRequest
     {
         return [
             'player_id' => 'required|uuid|exists:players,id',
+             'minute'    => 'required|integer|min:1|max:120',
         ];
     }
 }

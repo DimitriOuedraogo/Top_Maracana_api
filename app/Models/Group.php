@@ -24,7 +24,19 @@ class Group extends Model
 
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'group_team');
+        return $this->belongsToMany(Team::class, 'group_team')
+            ->withPivot([
+                'played',
+                'win',
+                'draws',
+                'losses',
+                'goals_for',
+                'goals_against',
+                'goal_difference',
+                'points',
+            ])
+            ->orderByPivot('points', 'desc') 
+            ->orderByPivot('goal_difference', 'desc');
     }
 
     public function matches(): HasMany

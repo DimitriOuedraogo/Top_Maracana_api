@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class MatchResult extends Model
+class MatchGoal extends Model
 {
     use HasUuids;
 
@@ -15,14 +15,17 @@ class MatchResult extends Model
 
     protected $fillable = [
         'match_id',
-        'home_score',
-        'away_score',
-        'home_penalty_score', 
-        'away_penalty_score',
+        'player_id',
+        'minute',
     ];
 
     public function match(): BelongsTo
     {
         return $this->belongsTo(GameMatch::class, 'match_id');
+    }
+
+    public function player(): BelongsTo
+    {
+        return $this->belongsTo(Player::class);
     }
 }

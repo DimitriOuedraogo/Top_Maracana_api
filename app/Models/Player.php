@@ -20,6 +20,7 @@ class Player extends Model
         'national_id_number',
         'national_id_photo',
         'birth_date',
+        'is_goalkeeper',
     ];
 
     protected $casts = [

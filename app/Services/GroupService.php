@@ -20,7 +20,9 @@ class GroupService
             ->with('team')
             ->get()
             ->pluck('team')
-            ->shuffle(); // ← mélange aléatoire
+            ->unique('id')
+            ->values()     // ← Réindexer après unique
+            ->shuffle();   // ← mélange aléatoire
 
         // 2. Diviser en groupes de 4
         $groupsOfTeams = $teams->chunk(self::TEAMS_PER_GROUP);

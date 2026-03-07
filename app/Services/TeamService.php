@@ -91,6 +91,18 @@ class TeamService
             );
         }
 
+
+        // 5.1 Vérifier qu'il y a exactement 1 gardien ← NOUVEAU
+        $goalkeeperCount = collect($players)->where('is_goalkeeper', true)->count();
+
+        if ($goalkeeperCount === 0) {
+            throw new \Exception('Vous devez avoir au moins 1 gardien de but.', 400);
+        }
+
+        if ($goalkeeperCount > 1) {
+            throw new \Exception('Vous ne pouvez avoir qu\'un seul gardien de but.', 400);
+        }
+
         // 6. Vérifier la tranche d'âge des joueurs
         foreach ($players as $player) {
             $age = Carbon::parse($player['birth_date'])->age;
@@ -109,6 +121,8 @@ class TeamService
                 );
             }
         }
+
+
 
         // 7. Créer l'équipe
         $data['manager_id'] = Auth::id();

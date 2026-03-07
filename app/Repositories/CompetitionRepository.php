@@ -32,9 +32,12 @@ class CompetitionRepository
             'matches.homeTeam',     // ← matchs + équipe domicile
             'matches.awayTeam',     // ← matchs + équipe extérieur
             'matches.group',        // ← groupe du match
+            'winner',
+            'topScorer.team',      // ← ajoute
+            'bestPlayer.team',     // ← ajoute
+            'bestGoalkeeper.team', // ← ajoute
         ])->find($id);
 
-        
         return $competition;
     }
 

@@ -59,4 +59,9 @@ class GameMatch extends Model
     {
         return $this->hasMany(MatchCard::class, 'match_id');
     }
+
+    public function goals(): HasMany
+    {
+        return $this->hasMany(MatchGoal::class, 'match_id');
+    }
 }

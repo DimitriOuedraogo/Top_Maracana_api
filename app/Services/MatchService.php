@@ -6,6 +6,7 @@ use App\Models\Competition;
 use App\Models\GameMatch;
 use App\Models\MatchResult;
 use App\Models\MatchCard;
+use App\Models\MatchGoal;
 use Illuminate\Support\Collection;
 
 class MatchService
@@ -33,7 +34,7 @@ class MatchService
     // ── Ajouter un but ────────────────────────────────────────
     public function addGoal(string $matchId, array $data): array
     {
-        $match = GameMatch::with(['homeTeam', 'awayTeam', 'result'])->find($matchId);
+        $match = GameMatch::with(['homeTeam', 'awayTeam', 'result', 'competition'])->find($matchId);
 
         if (!$match) {
             throw new \Exception('Match introuvable.', 404);
@@ -42,6 +43,10 @@ class MatchService
         if ($match->status === 'played') {
             throw new \Exception('Ce match est déjà clôturé.', 400);
         }
+
+
+        // ← Vérifier que c'est bien l'organisateur
+        $this->checkOrganizer($match);
 
         // Vérifier que le joueur appartient à une des deux équipes
         $player = \App\Models\Player::find($data['player_id']);
@@ -60,7 +65,12 @@ class MatchService
             'home_score' => 0,
             'away_score' => 0,
         ]);
-
+        // Stocker le but
+        MatchGoal::create([
+            'match_id' => $matchId,
+            'player_id' => $data['player_id'],
+            'minute' => $data['minute'],
+        ]);
         // Incrémenter le score de la bonne équipe
         if ($player->team_id === $match->home_team_id) {
             $result->increment('home_score');
@@ -70,6 +80,8 @@ class MatchService
 
         return [
             'message' => 'But ajouté avec succès.',
+            'scorer' => $player->full_name,
+            'minute' => $data['minute'],
             'result' => $result->fresh(),
         ];
     }
@@ -86,6 +98,9 @@ class MatchService
         if ($match->status === 'played') {
             throw new \Exception('Ce match est déjà clôturé.', 400);
         }
+
+        // ← Vérifier que c'est bien l'organisateur
+        $this->checkOrganizer($match);
 
         // Vérifier que le joueur appartient à une des deux équipes
         $player = \App\Models\Player::find($data['player_id']);
@@ -125,7 +140,7 @@ class MatchService
     // ── Clôturer le match ─────────────────────────────────────
     public function closeMatch(string $matchId): array
     {
-        $match = GameMatch::with(['homeTeam', 'awayTeam', 'result'])->find($matchId);
+        $match = GameMatch::with(['homeTeam', 'awayTeam', 'result', 'competition'])->find($matchId);
 
         if (!$match) {
             throw new \Exception('Match introuvable.', 404);
@@ -134,6 +149,12 @@ class MatchService
         if ($match->status === 'played') {
             throw new \Exception('Ce match est déjà clôturé.', 400);
         }
+
+        // ← 1. Vérifier que c'est bien l'organisateur
+        $this->checkOrganizer($match);
+
+        // ← 2. Vérifier que la semaine précédente est complète
+        $this->checkPreviousWeekCompleted($match);
 
         // Récupérer ou créer le résultat (0-0 si aucun but)
         $result = $match->result ?? MatchResult::create([
@@ -150,6 +171,102 @@ class MatchService
 
         // Passer le match à "played"
         $match->update(['status' => 'played']);
+        if ($match->round_type === 'final') {
+            $result = $match->result;
+            $homeScore = $result->home_score;
+            $awayScore = $result->away_score;
+
+            // Déterminer le vainqueur
+            if ($homeScore > $awayScore) {
+                $winnerId = $match->home_team_id;
+            } elseif ($awayScore > $homeScore) {
+                $winnerId = $match->away_team_id;
+            } else {
+                // Match nul → vérifier les tirs au but
+                $winnerId = $result->home_penalty_score > $result->away_penalty_score
+                    ? $match->home_team_id
+                    : $match->away_team_id;
+            }
+
+            $competitionId = $match->competition_id;
+
+            // ── Meilleur buteur ───────────────────────────────────
+            $topScorer = \App\Models\MatchGoal::whereHas('match', function ($q) use ($competitionId) {
+                $q->where('competition_id', $competitionId);
+            })
+                ->select('player_id', \DB::raw('COUNT(*) as goals'))
+                ->groupBy('player_id')
+                ->orderByDesc('goals')
+                ->first();
+
+            // ── Meilleur joueur ───────────────────────────────────
+            $players = \App\Models\Player::whereHas('team', function ($q) use ($competitionId) {
+                $q->where('competition_id', $competitionId);
+            })->get();
+
+            $bestPlayerId = null;
+            $bestScore = null;
+
+            foreach ($players as $player) {
+                $goals = \App\Models\MatchGoal::whereHas('match', function ($q) use ($competitionId) {
+                    $q->where('competition_id', $competitionId);
+                })->where('player_id', $player->id)->count();
+
+                $yellowCards = \App\Models\MatchCard::whereHas('match', function ($q) use ($competitionId) {
+                    $q->where('competition_id', $competitionId);
+                })->where('player_id', $player->id)->where('card_type', 'yellow')->count();
+
+                $redCards = \App\Models\MatchCard::whereHas('match', function ($q) use ($competitionId) {
+                    $q->where('competition_id', $competitionId);
+                })->where('player_id', $player->id)->where('card_type', 'red')->count();
+
+                $score = ($goals * 3) - ($yellowCards * 1) - ($redCards * 3);
+
+                if ($bestScore === null || $score > $bestScore) {
+                    $bestScore = $score;
+                    $bestPlayerId = $player->id;
+                }
+            }
+
+            // ── Meilleur gardien ──────────────────────────────────
+            $teams = \App\Models\Team::where('competition_id', $competitionId)->get();
+            $bestGoalkeeperId = null;
+            $minGoalsAgainst = null;
+
+            foreach ($teams as $team) {
+                $goalsAgainstHome = \App\Models\MatchResult::whereHas('match', function ($q) use ($competitionId, $team) {
+                    $q->where('competition_id', $competitionId)
+                        ->where('home_team_id', $team->id)
+                        ->where('status', 'played');
+                })->sum('away_score');
+
+                $goalsAgainstAway = \App\Models\MatchResult::whereHas('match', function ($q) use ($competitionId, $team) {
+                    $q->where('competition_id', $competitionId)
+                        ->where('away_team_id', $team->id)
+                        ->where('status', 'played');
+                })->sum('home_score');
+
+                $totalGoalsAgainst = $goalsAgainstHome + $goalsAgainstAway;
+
+                if ($minGoalsAgainst === null || $totalGoalsAgainst < $minGoalsAgainst) {
+                    $minGoalsAgainst = $totalGoalsAgainst;
+                    $goalkeeper = \App\Models\Player::where('team_id', $team->id)
+                        ->where('is_goalkeeper', true)
+                        ->first();
+                    if ($goalkeeper) {
+                        $bestGoalkeeperId = $goalkeeper->id;
+                    }
+                }
+            }
+            // ← Stocker tout dans la compétition
+            $match->competition->update([
+                'status' => 'finished',
+                'winner_id' => $winnerId,
+                'top_scorer_id' => $topScorer?->player_id,
+                'best_player_id' => $bestPlayerId,
+                'best_goalkeeper_id' => $bestGoalkeeperId,
+            ]);
+        }
 
         return [
             'message' => 'Match clôturé avec succès.',
@@ -165,9 +282,47 @@ class MatchService
         ];
     }
 
+    private function checkOrganizer(GameMatch $match): void
+    {
+        $competition = $match->competition;
+
+        if ($competition->organizer_id !== \Illuminate\Support\Facades\Auth::id()) {
+            throw new \Exception('Seul l\'organisateur peut gérer ce match.', 403);
+        }
+    }
+
+    private function checkPreviousWeekCompleted(GameMatch $match): void
+    {
+        // Semaine 1 → pas de semaine précédente → OK
+        if ($match->week_number === 1) {
+            return;
+        }
+
+        $previousWeek = $match->week_number - 1;
+
+        $unplayedMatches = GameMatch::where('group_id', $match->group_id)
+            ->where('week_number', $previousWeek)
+            ->where('status', '!=', 'played')
+            ->count();
+
+        if ($unplayedMatches > 0) {
+            throw new \Exception(
+                "Impossible de clôturer ce match. Il reste $unplayedMatches match(s) non clôturé(s) de la semaine $previousWeek.",
+                400
+            );
+        }
+    }
+
+
+
     // ── Mettre à jour le classement ───────────────────────────
     private function updateStandings(GameMatch $match, int $homeScore, int $awayScore): void
     {
+        // ← Les matchs éliminatoires n'ont pas de groupe → pas de classement à mettre à jour
+        if ($match->group_id === null) {
+            return;
+        }
+
         $groupId = $match->group_id;
         $homeTeamId = $match->home_team_id;
         $awayTeamId = $match->away_team_id;

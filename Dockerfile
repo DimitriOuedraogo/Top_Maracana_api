@@ -1,25 +1,40 @@
-FROM php:8.2-cli
+# 1. Image de base PHP avec extensions nécessaires
+FROM php:8.2-fpm
 
-WORKDIR /app
-
-# installer dépendances système
+# 2. Installer les dépendances système nécessaires
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
+    curl \
     libzip-dev \
-    && docker-php-ext-install zip
+    libonig-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    vim \
+    && docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath gd
 
-# installer composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# 3. Installer Composer
+COPY --from=composer:2.6 /usr/bin/composer /usr/bin/composer
 
-# copier le projet
+# 4. Copier le projet dans le container
+WORKDIR /var/www
 COPY . .
 
-# installer dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader
+# 5. Installer les dépendances PHP via Composer
+RUN composer install --optimize-autoloader --no-dev
 
-# exposer le port
-EXPOSE 10000
+# 6. Copier le fichier .env si nécessaire
+# (Render peut gérer les variables d'environnement à part, donc optionnel)
+# COPY .env .env
 
-# démarrer le serveur
-CMD php -S 0.0.0.0:10000 -t public
+# 7. Donner les droits pour storage et bootstrap/cache
+RUN chown -R www-data:www-data /var/www \
+    && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+
+# 8. Exposer le port sur lequel Laravel va écouter
+EXPOSE 8000
+
+# 9. Commande pour lancer Laravel
+CMD php artisan serve --host=0.0.0.0 --port=8000

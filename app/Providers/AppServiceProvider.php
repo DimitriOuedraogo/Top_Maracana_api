@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Event;
 use App\Events\CompetitionFull;
 use App\Listeners\GenerateGroupsAndMatches;
+use Illuminate\Support\Facades\URL;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-      
+      // Force HTTPS en production
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }

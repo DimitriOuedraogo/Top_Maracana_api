@@ -197,28 +197,48 @@ class CompetitionController extends Controller
     }
 
     /**
-     * @OA\RequestBody(
-     *     required=true,
-     *     @OA\JsonContent(
-     *         required={"name","location","start_date","end_date","max_teams","players_per_team","days","time_slots","matches_per_day"},
-     *         @OA\Property(property="name", type="string", example="Tournoi Maracana"),
-     *         @OA\Property(property="location", type="string", example="Ouagadougou"),
-     *         @OA\Property(property="start_date", type="string", format="date", example="2026-04-01"),
-     *         @OA\Property(property="end_date", type="string", format="date", example="2026-04-30"),
-     *         @OA\Property(property="max_teams", type="integer", example=8),
-     *         @OA\Property(property="players_per_team", type="integer", example=11),
-     *         @OA\Property(property="matches_per_day", type="integer", example=2),
-     *         @OA\Property(property="days", type="array", @OA\Items(type="integer"), example={6,0}),
-     *         @OA\Property(property="time_slots", type="array", @OA\Items(type="object",
-     *             @OA\Property(property="start_time", type="string", example="10:00"),
-     *             @OA\Property(property="end_time", type="string", example="12:00")
-     *         )),
-     *         @OA\Property(property="registration_fee", type="number", nullable=true, example=5000),
-     *         @OA\Property(property="prize_description", type="string", nullable=true, example="Trophée + 500 000 FCFA"),
-     *         @OA\Property(property="age_min", type="integer", nullable=true, example=18),
-     *         @OA\Property(property="age_max", type="integer", nullable=true, example=40)
-     *     )
-     * ),
+     * @OA\Post(
+     *     path="/competitions",
+     *     summary="Créer une nouvelle compétition",
+     *     tags={"Compétitions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","location","start_date","end_date","max_teams","players_per_team","days","time_slots","matches_per_day"},
+     *             @OA\Property(property="name", type="string", example="Tournoi Maracana"),
+     *             @OA\Property(property="location", type="string", example="Ouagadougou"),
+     *             @OA\Property(property="start_date", type="string", format="date", example="2026-04-01"),
+     *             @OA\Property(property="end_date", type="string", format="date", example="2026-04-30"),
+     *             @OA\Property(property="max_teams", type="integer", example=8),
+     *             @OA\Property(property="players_per_team", type="integer", example=11),
+     *             @OA\Property(property="matches_per_day", type="integer", example=2),
+     *             @OA\Property(property="days", type="array", @OA\Items(type="integer"), example={6,0}),
+     *             @OA\Property(
+     *                 property="time_slots",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="start_time", type="string", example="10:00"),
+     *                     @OA\Property(property="end_time", type="string", example="12:00")
+     *                 )
+     *             ),
+     *             @OA\Property(property="registration_fee", type="number", nullable=true, example=5000),
+     *             @OA\Property(property="prize_description", type="string", nullable=true, example="Trophée + 500 000 FCFA"),
+     *             @OA\Property(property="age_min", type="integer", nullable=true, example=18),
+     *             @OA\Property(property="age_max", type="integer", nullable=true, example=40)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Compétition créée avec succès",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true)
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=422, description="Erreur de validation")
+     * )
      */
     public function store(StoreCompetitionRequest $request): JsonResponse
     {

@@ -11,6 +11,15 @@ class StoreTeamRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('players') && is_string($this->players)) {
+            $decoded = json_decode($this->players, true);
+            $this->merge(['players' => $decoded ?? $this->players]);
+        }
+    }
+
+
     public function rules(): array
     {
         return [

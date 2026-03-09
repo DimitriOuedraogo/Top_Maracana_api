@@ -14,7 +14,8 @@ class TeamController extends Controller
 {
     public function __construct(
         protected TeamService $teamService
-    ) {}
+    ) {
+    }
 
     /**
      * @OA\Get(
@@ -166,23 +167,20 @@ class TeamController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 required={"competition_id","name","players"},
-     *                 @OA\Property(property="competition_id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000", description="UUID de la compétition"),
-     *                 @OA\Property(property="name", type="string", example="Les Lions 1", description="Nom de l'équipe"),
-     *                 @OA\Property(property="logo", type="string", format="binary", nullable=true, description="Logo de l'équipe (jpeg, png, jpg) max 2Mo"),
-     *                 @OA\Property(property="players", type="array",
-     *                     description="Liste des joueurs. Doit contenir exactement le nombre requis par la compétition avec exactement 1 gardien.",
-     *                     @OA\Items(
-     *                         required={"full_name","birth_date","is_goalkeeper"},
-     *                         @OA\Property(property="full_name", type="string", example="Joueur 1", description="Nom complet du joueur"),
-     *                         @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01", description="Date de naissance du joueur"),
-     *                         @OA\Property(property="is_goalkeeper", type="boolean", example=false, description="True si le joueur est gardien. Exactement 1 gardien requis par équipe."),
-     *                         @OA\Property(property="national_id_number", type="string", nullable=true, example="BF123456", description="Numéro de CNI (optionnel, unique)"),
-     *                         @OA\Property(property="national_id_photo", type="string", format="binary", nullable=true, description="Photo de la CNI (optionnel, jpeg, png, jpg) max 2Mo")
-     *                     )
+     *         @OA\JsonContent(
+     *             required={"competition_id","name","players"},
+     *             @OA\Property(property="competition_id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
+     *             @OA\Property(property="name", type="string", example="Les Lions 1"),
+     *             @OA\Property(
+     *                 property="players",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"full_name","birth_date","is_goalkeeper"},
+     *                     @OA\Property(property="full_name", type="string", example="Joueur 1"),
+     *                     @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01"),
+     *                     @OA\Property(property="is_goalkeeper", type="boolean", example=false),
+     *                     @OA\Property(property="national_id_number", type="string", nullable=true, example=null)
      *                 )
      *             )
      *         )
@@ -191,43 +189,12 @@ class TeamController extends Controller
      *         response=201,
      *         description="Équipe créée et inscrite avec succès",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="team", type="object",
-     *                 @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                 @OA\Property(property="name", type="string", example="Les Lions 1"),
-     *                 @OA\Property(property="competition_id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440001"),
-     *                 @OA\Property(property="logo", type="string", nullable=true, example=null),
-     *                 @OA\Property(property="players", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440002"),
-     *                         @OA\Property(property="full_name", type="string", example="Joueur 1"),
-     *                         @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01"),
-     *                         @OA\Property(property="is_goalkeeper", type="boolean", example=false),
-     *                         @OA\Property(property="national_id_number", type="string", nullable=true, example=null),
-     *                         @OA\Property(property="national_id_photo", type="string", nullable=true, example=null)
-     *                     )
-     *                 )
-     *             )
+     *             @OA\Property(property="success", type="boolean", example=true)
      *         )
      *     ),
-     *     @OA\Response(response=400, description="Erreur métier",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Vous devez avoir exactement 1 gardien de but.")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Non authentifié",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Non authentifié.")
-     *         )
-     *     ),
-     *     @OA\Response(response=422, description="Erreur de validation",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Le nom de l'équipe est obligatoire.")
-     *         )
-     *     )
+     *     @OA\Response(response=400, description="Erreur métier"),
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=422, description="Erreur de validation")
      * )
      */
     public function store(StoreTeamRequest $request): JsonResponse
@@ -239,7 +206,6 @@ class TeamController extends Controller
             return $this->handleException($e);
         }
     }
-
     /**
      * @OA\Post(
      *     path="/teams/{id}",
@@ -253,19 +219,18 @@ class TeamController extends Controller
      *         @OA\Schema(type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000")
      *     ),
      *     @OA\RequestBody(
-     *         @OA\MediaType(
-     *             mediaType="multipart/form-data",
-     *             @OA\Schema(
-     *                 @OA\Property(property="name", type="string", nullable=true, example="Les Lions FC"),
-     *                 @OA\Property(property="logo", type="string", format="binary", nullable=true, description="Nouveau logo (jpeg, png, jpg) max 2Mo"),
-     *                 @OA\Property(property="players", type="array", nullable=true,
-     *                     @OA\Items(
-     *                         @OA\Property(property="full_name", type="string", example="Nouveau Joueur"),
-     *                         @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01"),
-     *                         @OA\Property(property="is_goalkeeper", type="boolean", example=false),
-     *                         @OA\Property(property="national_id_number", type="string", nullable=true, example=null),
-     *                         @OA\Property(property="national_id_photo", type="string", format="binary", nullable=true)
-     *                     )
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", nullable=true, example="Les Lions FC"),
+     *             @OA\Property(
+     *                 property="players",
+     *                 type="array",
+     *                 nullable=true,
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="full_name", type="string", example="Nouveau Joueur"),
+     *                     @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01"),
+     *                     @OA\Property(property="is_goalkeeper", type="boolean", example=false),
+     *                     @OA\Property(property="national_id_number", type="string", nullable=true, example=null)
      *                 )
      *             )
      *         )
@@ -274,42 +239,12 @@ class TeamController extends Controller
      *         response=200,
      *         description="Équipe modifiée avec succès",
      *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="team", type="object",
-     *                 @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440000"),
-     *                 @OA\Property(property="name", type="string", example="Les Lions FC"),
-     *                 @OA\Property(property="logo", type="string", nullable=true, example=null),
-     *                 @OA\Property(property="players", type="array",
-     *                     @OA\Items(
-     *                         @OA\Property(property="id", type="string", format="uuid", example="550e8400-e29b-41d4-a716-446655440001"),
-     *                         @OA\Property(property="full_name", type="string", example="Nouveau Joueur"),
-     *                         @OA\Property(property="birth_date", type="string", format="date", example="2000-01-01"),
-     *                         @OA\Property(property="is_goalkeeper", type="boolean", example=false),
-     *                         @OA\Property(property="national_id_number", type="string", nullable=true, example=null),
-     *                         @OA\Property(property="national_id_photo", type="string", nullable=true, example=null)
-     *                     )
-     *                 )
-     *             )
+     *             @OA\Property(property="success", type="boolean", example=true)
      *         )
      *     ),
-     *     @OA\Response(response=401, description="Non authentifié",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Non authentifié.")
-     *         )
-     *     ),
-     *     @OA\Response(response=403, description="Action non autorisée",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Vous n'êtes pas autorisé à modifier cette équipe.")
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Équipe introuvable",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string", example="Équipe introuvable.")
-     *         )
-     *     )
+     *     @OA\Response(response=401, description="Non authentifié"),
+     *     @OA\Response(response=403, description="Action non autorisée"),
+     *     @OA\Response(response=404, description="Équipe introuvable")
      * )
      */
     public function update(UpdateTeamRequest $request, string $id): JsonResponse

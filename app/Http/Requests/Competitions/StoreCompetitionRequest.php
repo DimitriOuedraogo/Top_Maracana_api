@@ -8,6 +8,31 @@ class StoreCompetitionRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
+    // 👇 Ajoute cette méthode
+    protected function prepareForValidation(): void
+    {
+        $data = [];
+
+        // Convertit days si c'est une string JSON ex: "[6,0]"
+        if ($this->has('days') && is_string($this->days)) {
+            $decoded = json_decode($this->days, true);
+            $data['days'] = $decoded ?? $this->days;
+        }
+
+        // Convertit time_slots si c'est une string JSON
+        if ($this->has('time_slots') && is_string($this->time_slots)) {
+            $decoded = json_decode($this->time_slots, true);
+            $data['time_slots'] = $decoded ?? $this->time_slots;
+        }
+
+        // Supprime poster_image si c'est une string vide
+        if ($this->has('poster_image') && $this->poster_image === '') {
+            $this->request->remove('poster_image');
+        }
+
+        $this->merge($data);
+    }
+
     public function rules(): array
     {
         return [

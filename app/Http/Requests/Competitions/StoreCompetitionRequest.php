@@ -28,6 +28,7 @@ class StoreCompetitionRequest extends FormRequest
         // Supprime poster_image si c'est une string vide
         if ($this->has('poster_image') && $this->poster_image === '') {
             $this->request->remove('poster_image');
+            $this->files->remove('poster_image'); 
         }
 
         $this->merge($data);

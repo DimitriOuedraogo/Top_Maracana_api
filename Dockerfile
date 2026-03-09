@@ -13,9 +13,14 @@ COPY . .
 
 RUN composer install --optimize-autoloader --no-dev
 
+RUN php artisan vendor:publish --provider="L5Swagger\L5SwaggerServiceProvider"
+
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan optimize:clear && \
+    php artisan l5-swagger:generate && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=$PORT

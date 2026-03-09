@@ -75,3 +75,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/competitions/{id}/generate-knockout', [KnockoutController::class, 'generateKnockout']);
     Route::post('/competitions/{id}/next-round', [KnockoutController::class, 'generateNextRound']);
 });
+
+Route::get('/ping', function () {
+    return response()->json(['status' => 'ok', 'message' => 'App is alive!']);
+});

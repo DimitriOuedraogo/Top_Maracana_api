@@ -974,7 +974,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "name",
@@ -1019,7 +1019,6 @@
                                         "example": 2
                                     },
                                     "days": {
-                                        "description": "Jours de match : 0=Dimanche, 6=Samedi",
                                         "type": "array",
                                         "items": {
                                             "type": "integer"
@@ -1030,18 +1029,22 @@
                                         ]
                                     },
                                     "time_slots": {
-                                        "description": "Créneaux horaires des matchs",
                                         "type": "array",
                                         "items": {
-                                            "type": "string"
-                                        },
-                                        "example": [
-                                            "10:00",
-                                            "15:00"
-                                        ]
+                                            "properties": {
+                                                "start_time": {
+                                                    "type": "string",
+                                                    "example": "10:00"
+                                                },
+                                                "end_time": {
+                                                    "type": "string",
+                                                    "example": "12:00"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     },
                                     "registration_fee": {
-                                        "description": "Frais d'inscription. Par défaut : 0",
                                         "type": "number",
                                         "example": 5000,
                                         "nullable": true
@@ -1060,12 +1063,6 @@
                                         "type": "integer",
                                         "example": 40,
                                         "nullable": true
-                                    },
-                                    "poster_image": {
-                                        "description": "Image d'affiche (jpeg, png, jpg) max 2Mo",
-                                        "type": "string",
-                                        "format": "binary",
-                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -1083,24 +1080,6 @@
                                         "success": {
                                             "type": "boolean",
                                             "example": true
-                                        },
-                                        "competition": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Tournoi Maracana"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "example": "registration_open"
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -1109,44 +1088,10 @@
                         }
                     },
                     "401": {
-                        "description": "Non authentifié",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Non authentifié."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Non authentifié"
                     },
                     "422": {
-                        "description": "Erreur de validation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Le nom de la compétition est obligatoire."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Erreur de validation"
                     }
                 },
                 "security": [
@@ -2360,29 +2305,27 @@
                 }
             }
         },
-        "/competitions/{id}/statistics": {
+        "/competitions/{id}/teams": {
             "get": {
                 "tags": [
                     "Compétitions"
                 ],
-                "summary": "Statistiques d'une compétition",
-                "operationId": "8b43f849e49cd99e8de68fcbd51229a7",
+                "summary": "Équipes validées d'une compétition (inscriptions approuvées)",
+                "operationId": "ebfc968b00fc1830d087eaa5c3ed5dd4",
                 "parameters": [
                     {
                         "name": "id",
                         "in": "path",
-                        "description": "UUID de la compétition",
                         "required": true,
                         "schema": {
                             "type": "string",
-                            "format": "uuid",
-                            "example": "550e8400-e29b-41d4-a716-446655440000"
+                            "format": "uuid"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Statistiques de la compétition",
+                        "description": "Liste des équipes approuvées",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2395,71 +2338,23 @@
                                             "type": "string",
                                             "example": "Tournoi Maracana"
                                         },
-                                        "top_scorer": {
-                                            "properties": {
-                                                "player": {
-                                                    "type": "string",
-                                                    "example": "Joueur 1"
-                                                },
-                                                "team": {
-                                                    "type": "string",
-                                                    "example": "Les Lions 8"
-                                                },
-                                                "goals": {
-                                                    "type": "integer",
-                                                    "example": 5
-                                                }
-                                            },
-                                            "type": "object",
-                                            "nullable": true
+                                        "status": {
+                                            "type": "string",
+                                            "example": "registration_open"
                                         },
-                                        "best_player": {
-                                            "properties": {
-                                                "player": {
-                                                    "type": "string",
-                                                    "example": "Joueur 2"
-                                                },
-                                                "team": {
-                                                    "type": "string",
-                                                    "example": "Les Lions 5"
-                                                },
-                                                "goals": {
-                                                    "type": "integer",
-                                                    "example": 3
-                                                },
-                                                "yellow_cards": {
-                                                    "type": "integer",
-                                                    "example": 0
-                                                },
-                                                "red_cards": {
-                                                    "type": "integer",
-                                                    "example": 0
-                                                },
-                                                "score": {
-                                                    "type": "integer",
-                                                    "example": 9
-                                                }
-                                            },
-                                            "type": "object",
-                                            "nullable": true
+                                        "approved_count": {
+                                            "type": "integer",
+                                            "example": 5
                                         },
-                                        "best_goalkeeper": {
-                                            "properties": {
-                                                "player": {
-                                                    "type": "string",
-                                                    "example": "Gardien 1"
-                                                },
-                                                "team": {
-                                                    "type": "string",
-                                                    "example": "Les Lions 3"
-                                                },
-                                                "goals_against": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                }
-                                            },
-                                            "type": "object",
-                                            "nullable": true
+                                        "max_teams": {
+                                            "type": "integer",
+                                            "example": 8
+                                        },
+                                        "teams": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
                                         }
                                     },
                                     "type": "object"
@@ -2468,26 +2363,138 @@
                         }
                     },
                     "404": {
-                        "description": "Compétition introuvable",
+                        "description": "Compétition introuvable"
+                    }
+                }
+            }
+        },
+        "/competitions/{id}/publish": {
+            "post": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Publier une compétition (draft → registration_open)",
+                "operationId": "ba4f5578d874a8ea0018a1a5b0ad0d97",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Compétition publiée",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "success": {
                                             "type": "boolean",
-                                            "example": false
+                                            "example": true
                                         },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Compétition introuvable."
+                                        "competition": {
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
                                 }
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Statut invalide"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
                     }
-                }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/competitions/{id}/poster": {
+            "post": {
+                "tags": [
+                    "Compétitions"
+                ],
+                "summary": "Uploader ou remplacer l'affiche d'une compétition",
+                "operationId": "03acf73f4eb575e2f3147359b59a6b9a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "poster_image"
+                                ],
+                                "properties": {
+                                    "poster_image": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Affiche mise à jour",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "competition": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    },
+                    "422": {
+                        "description": "Fichier invalide"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/groups": {
@@ -4622,6 +4629,292 @@
                 ]
             }
         },
+        "/competitions/{id}/register": {
+            "post": {
+                "tags": [
+                    "Inscriptions"
+                ],
+                "summary": "Inscrire une équipe existante à une compétition",
+                "operationId": "7517c384d24f3918bd943e1200abd3b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "UUID de la compétition",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "team_id"
+                                ],
+                                "properties": {
+                                    "team_id": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Inscription soumise",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Demande d'inscription soumise. En attente de validation par l'organisateur."
+                                        },
+                                        "registration": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "team_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "competition_id": {
+                                                    "type": "string",
+                                                    "format": "uuid"
+                                                },
+                                                "status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation métier échouée (inscriptions fermées, trop/pas assez de joueurs, âge, etc.)"
+                    },
+                    "403": {
+                        "description": "L'équipe n'appartient pas au manager connecté"
+                    },
+                    "404": {
+                        "description": "Compétition ou équipe introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/competitions/{id}/registrations": {
+            "get": {
+                "tags": [
+                    "Inscriptions"
+                ],
+                "summary": "Lister les inscriptions d'une compétition (organisateur uniquement)",
+                "operationId": "ebd2bf4a07ec720e7a50ba2861b828c5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des inscriptions",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "registrations": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "properties": {
+                                                "total": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "pending": {
+                                                    "type": "integer",
+                                                    "example": 3
+                                                },
+                                                "approved": {
+                                                    "type": "integer",
+                                                    "example": 6
+                                                },
+                                                "rejected": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Compétition introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/registrations/{id}/approve": {
+            "patch": {
+                "tags": [
+                    "Inscriptions"
+                ],
+                "summary": "Approuver une inscription",
+                "operationId": "a55a5153f0c9ee4499966c0c9dade679",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Inscription approuvée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Inscription approuvée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Statut invalide"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Inscription introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/registrations/{id}/reject": {
+            "patch": {
+                "tags": [
+                    "Inscriptions"
+                ],
+                "summary": "Refuser une inscription",
+                "operationId": "192cfd2ecbf10c00fdcd21c74e72f355",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Inscription refusée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Inscription refusée."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Statut invalide"
+                    },
+                    "403": {
+                        "description": "Action non autorisée"
+                    },
+                    "404": {
+                        "description": "Inscription introuvable"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/teams": {
             "get": {
                 "tags": [
@@ -4701,7 +4994,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "required": [
                                     "competition_id",
@@ -4710,24 +5003,15 @@
                                 ],
                                 "properties": {
                                     "competition_id": {
-                                        "description": "UUID de la compétition",
                                         "type": "string",
                                         "format": "uuid",
                                         "example": "550e8400-e29b-41d4-a716-446655440000"
                                     },
                                     "name": {
-                                        "description": "Nom de l'équipe",
                                         "type": "string",
                                         "example": "Les Lions 1"
                                     },
-                                    "logo": {
-                                        "description": "Logo de l'équipe (jpeg, png, jpg) max 2Mo",
-                                        "type": "string",
-                                        "format": "binary",
-                                        "nullable": true
-                                    },
                                     "players": {
-                                        "description": "Liste des joueurs. Doit contenir exactement le nombre requis par la compétition avec exactement 1 gardien.",
                                         "type": "array",
                                         "items": {
                                             "required": [
@@ -4737,31 +5021,21 @@
                                             ],
                                             "properties": {
                                                 "full_name": {
-                                                    "description": "Nom complet du joueur",
                                                     "type": "string",
                                                     "example": "Joueur 1"
                                                 },
                                                 "birth_date": {
-                                                    "description": "Date de naissance du joueur",
                                                     "type": "string",
                                                     "format": "date",
                                                     "example": "2000-01-01"
                                                 },
                                                 "is_goalkeeper": {
-                                                    "description": "True si le joueur est gardien. Exactement 1 gardien requis par équipe.",
                                                     "type": "boolean",
                                                     "example": false
                                                 },
                                                 "national_id_number": {
-                                                    "description": "Numéro de CNI (optionnel, unique)",
                                                     "type": "string",
-                                                    "example": "BF123456",
-                                                    "nullable": true
-                                                },
-                                                "national_id_photo": {
-                                                    "description": "Photo de la CNI (optionnel, jpeg, png, jpg) max 2Mo",
-                                                    "type": "string",
-                                                    "format": "binary",
+                                                    "example": null,
                                                     "nullable": true
                                                 }
                                             },
@@ -4784,66 +5058,6 @@
                                         "success": {
                                             "type": "boolean",
                                             "example": true
-                                        },
-                                        "team": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Les Lions 1"
-                                                },
-                                                "competition_id": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "example": "550e8400-e29b-41d4-a716-446655440001"
-                                                },
-                                                "logo": {
-                                                    "type": "string",
-                                                    "example": null,
-                                                    "nullable": true
-                                                },
-                                                "players": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "format": "uuid",
-                                                                "example": "550e8400-e29b-41d4-a716-446655440002"
-                                                            },
-                                                            "full_name": {
-                                                                "type": "string",
-                                                                "example": "Joueur 1"
-                                                            },
-                                                            "birth_date": {
-                                                                "type": "string",
-                                                                "format": "date",
-                                                                "example": "2000-01-01"
-                                                            },
-                                                            "is_goalkeeper": {
-                                                                "type": "boolean",
-                                                                "example": false
-                                                            },
-                                                            "national_id_number": {
-                                                                "type": "string",
-                                                                "example": null,
-                                                                "nullable": true
-                                                            },
-                                                            "national_id_photo": {
-                                                                "type": "string",
-                                                                "example": null,
-                                                                "nullable": true
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -4852,64 +5066,13 @@
                         }
                     },
                     "400": {
-                        "description": "Erreur métier",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Vous devez avoir exactement 1 gardien de but."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Erreur métier"
                     },
                     "401": {
-                        "description": "Non authentifié",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Non authentifié."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Non authentifié"
                     },
                     "422": {
-                        "description": "Erreur de validation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Le nom de l'équipe est obligatoire."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Erreur de validation"
                     }
                 },
                 "security": [
@@ -5206,18 +5369,12 @@
                 ],
                 "requestBody": {
                     "content": {
-                        "multipart/form-data": {
+                        "application/json": {
                             "schema": {
                                 "properties": {
                                     "name": {
                                         "type": "string",
                                         "example": "Les Lions FC",
-                                        "nullable": true
-                                    },
-                                    "logo": {
-                                        "description": "Nouveau logo (jpeg, png, jpg) max 2Mo",
-                                        "type": "string",
-                                        "format": "binary",
                                         "nullable": true
                                     },
                                     "players": {
@@ -5241,11 +5398,6 @@
                                                     "type": "string",
                                                     "example": null,
                                                     "nullable": true
-                                                },
-                                                "national_id_photo": {
-                                                    "type": "string",
-                                                    "format": "binary",
-                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -5268,61 +5420,6 @@
                                         "success": {
                                             "type": "boolean",
                                             "example": true
-                                        },
-                                        "team": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "format": "uuid",
-                                                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Les Lions FC"
-                                                },
-                                                "logo": {
-                                                    "type": "string",
-                                                    "example": null,
-                                                    "nullable": true
-                                                },
-                                                "players": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "format": "uuid",
-                                                                "example": "550e8400-e29b-41d4-a716-446655440001"
-                                                            },
-                                                            "full_name": {
-                                                                "type": "string",
-                                                                "example": "Nouveau Joueur"
-                                                            },
-                                                            "birth_date": {
-                                                                "type": "string",
-                                                                "format": "date",
-                                                                "example": "2000-01-01"
-                                                            },
-                                                            "is_goalkeeper": {
-                                                                "type": "boolean",
-                                                                "example": false
-                                                            },
-                                                            "national_id_number": {
-                                                                "type": "string",
-                                                                "example": null,
-                                                                "nullable": true
-                                                            },
-                                                            "national_id_photo": {
-                                                                "type": "string",
-                                                                "example": null,
-                                                                "nullable": true
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
                                         }
                                     },
                                     "type": "object"
@@ -5331,64 +5428,13 @@
                         }
                     },
                     "401": {
-                        "description": "Non authentifié",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Non authentifié."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Non authentifié"
                     },
                     "403": {
-                        "description": "Action non autorisée",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Vous n'êtes pas autorisé à modifier cette équipe."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Action non autorisée"
                     },
                     "404": {
-                        "description": "Équipe introuvable",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Équipe introuvable."
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                        "description": "Équipe introuvable"
                     }
                 },
                 "security": [
@@ -5536,6 +5582,10 @@
         {
             "name": "Matchs",
             "description": "Gestion des matchs"
+        },
+        {
+            "name": "Inscriptions",
+            "description": "Gestion des inscriptions aux compétitions"
         },
         {
             "name": "Équipes",

@@ -24,11 +24,12 @@ class UpdateTeamRequest extends FormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'logo' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
-            'players' => 'sometimes|array',
-            'players.*.full_name' => 'required_with:players|string|max:255',
-            'players.*.national_id_number' => 'sometimes|string|unique:players,national_id_number',
-            'players.*.national_id_photo' => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
-            'players.*.birth_date' => 'required_with:players|date',
+            'players'                          => 'sometimes|array|min:1',
+            'players.*.full_name'              => 'required_with:players|string|max:255',
+            'players.*.birth_date'             => 'required_with:players|date',
+            'players.*.is_goalkeeper'          => 'required_with:players|boolean',
+            'players.*.national_id_number'     => 'sometimes|string|unique:players,national_id_number',
+            'players.*.national_id_photo'      => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
         ];
     }
 }

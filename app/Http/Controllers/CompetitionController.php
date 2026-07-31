@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Competitions\StoreCompetitionRequest;
 use App\Http\Requests\Competitions\UpdateCompetitionRequest;
+use App\Http\Requests\Competitions\UploadPosterRequest;
 use App\Services\CompetitionService;
 use Illuminate\Http\JsonResponse;
 
@@ -647,10 +648,113 @@ class CompetitionController extends Controller
      *     )
      * )
      */
+    /**
+     * @OA\Get(
+     *     path="/competitions/{id}/teams",
+     *     summary="Équipes validées d'une compétition (inscriptions approuvées)",
+     *     tags={"Compétitions"},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string", format="uuid")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des équipes approuvées",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="competition", type="string", example="Tournoi Maracana"),
+     *             @OA\Property(property="status", type="string", example="registration_open"),
+     *             @OA\Property(property="approved_count", type="integer", example=5),
+     *             @OA\Property(property="max_teams", type="integer", example=8),
+     *             @OA\Property(property="teams", type="array", @OA\Items(type="object"))
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Compétition introuvable")
+     * )
+     */
+    public function approvedTeams(string $id): JsonResponse
+    {
+        try {
+            $result = $this->competitionService->getApprovedTeams($id);
+            return response()->json(['success' => true, ...$result], 200);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
     public function statistics(string $id): JsonResponse
     {
         try {
             $result = $this->competitionService->getStatistics($id);
+            return response()->json(['success' => true, ...$result], 200);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/competitions/{id}/publish",
+     *     summary="Publier une compétition (draft → registration_open)",
+     *     tags={"Compétitions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id", in="path", required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\Response(response=200, description="Compétition publiée",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="competition", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=400, description="Statut invalide"),
+     *     @OA\Response(response=403, description="Action non autorisée"),
+     *     @OA\Response(response=404, description="Compétition introuvable")
+     * )
+     */
+    public function publish(string $id): JsonResponse
+    {
+        try {
+            $result = $this->competitionService->publish($id);
+            return response()->json(['success' => true, ...$result], 200);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/competitions/{id}/poster",
+     *     summary="Uploader ou remplacer l'affiche d'une compétition",
+     *     tags={"Compétitions"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id", in="path", required=true,
+     *         @OA\Schema(type="string", format="uuid")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"poster_image"},
+     *                 @OA\Property(property="poster_image", type="string", format="binary")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Affiche mise à jour",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="competition", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Action non autorisée"),
+     *     @OA\Response(response=404, description="Compétition introuvable"),
+     *     @OA\Response(response=422, description="Fichier invalide")
+     * )
+     */
+    public function uploadPoster(UploadPosterRequest $request, string $id): JsonResponse
+    {
+        try {
+            $result = $this->competitionService->updatePoster($id, $request->file('poster_image'));
             return response()->json(['success' => true, ...$result], 200);
         } catch (\Exception $e) {
             return $this->handleException($e);

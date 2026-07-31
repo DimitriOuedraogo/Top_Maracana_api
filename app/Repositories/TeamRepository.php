@@ -14,22 +14,18 @@ class TeamRepository
 
     public function findById(string $id): ?Team
     {
-        return Team::with(['manager', 'players', 'competition'])->find($id);
+        return Team::with(['manager', 'players'])->find($id);
     }
 
     public function findByManager(string $managerId): Collection
     {
-        return Team::with(['players', 'competition'])
+        return Team::with([
+                       'players',
+                       'registrations.competition',
+                       'registrations.players',
+                   ])
                    ->where('manager_id', $managerId)
                    ->get();
-    }
-
-    public function findByManagerAndCompetition(string $managerId, string $competitionId): ?Team
-    {
-        return Team::with(['players'])
-                   ->where('manager_id', $managerId)
-                   ->where('competition_id', $competitionId)
-                   ->first();
     }
 
     public function create(array $data): Team

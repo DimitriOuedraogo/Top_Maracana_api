@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompetitionController;
+use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MatchController;
@@ -32,6 +33,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/competitions', [CompetitionController::class, 'store']);
     Route::post('/competitions/{id}', [CompetitionController::class, 'update']);
     Route::get('/competitions/{id}/knockout', [CompetitionController::class, 'knockoutMatches']);
+    Route::post('/competitions/{id}/publish', [CompetitionController::class, 'publish']);
+    Route::post('/competitions/{id}/poster', [CompetitionController::class, 'uploadPoster']);
     Route::delete('/competitions/{id}', [CompetitionController::class, 'destroy']);
 });
 
@@ -40,18 +43,19 @@ Route::get('/competitions/{id}', [CompetitionController::class, 'show']);
 Route::get('/competitions/{id}/groups', [CompetitionController::class, 'groups']);
 Route::get('/competitions/{id}/matches', [CompetitionController::class, 'matches']);
 Route::get('/competitions/{id}/statistics', [CompetitionController::class, 'statistics']);
+Route::get('/competitions/{id}/teams', [CompetitionController::class, 'approvedTeams']);
 
 
 // ── Équipes ──────────────────────────────────────────────
-Route::get('/teams', [TeamController::class, 'index']);
-Route::get('/teams/{id}', [TeamController::class, 'show']);
-
 Route::middleware('auth:api')->group(function () {
     Route::get('/teams/my', [TeamController::class, 'myTeams']);
     Route::post('/teams', [TeamController::class, 'store']);
     Route::post('/teams/{id}', [TeamController::class, 'update']);
     Route::delete('/teams/{id}', [TeamController::class, 'destroy']);
 });
+
+Route::get('/teams', [TeamController::class, 'index']);
+Route::get('/teams/{id}', [TeamController::class, 'show']);
 
 // ── Groupes ───────────────────────────────────────────────
 Route::get('/groups', [GroupController::class, 'index']);
@@ -74,6 +78,14 @@ Route::middleware('auth:api')->group(function () {
     // ── Knockout ──────────────────────────────────────────────
     Route::post('/competitions/{id}/generate-knockout', [KnockoutController::class, 'generateKnockout']);
     Route::post('/competitions/{id}/next-round', [KnockoutController::class, 'generateNextRound']);
+});
+
+// ── Inscriptions ──────────────────────────────────────────
+Route::middleware('auth:api')->group(function () {
+    Route::post('/competitions/{id}/register', [RegistrationController::class, 'register']);
+    Route::get('/competitions/{id}/registrations', [RegistrationController::class, 'index']);
+    Route::patch('/registrations/{id}/approve', [RegistrationController::class, 'approve']);
+    Route::patch('/registrations/{id}/reject', [RegistrationController::class, 'reject']);
 });
 
 Route::get('/ping', function () {

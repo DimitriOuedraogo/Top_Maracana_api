@@ -17,7 +17,6 @@ class Team extends Model
 
     protected $fillable = [
         'manager_id',
-        'competition_id',
         'name',
         'logo',
     ];
@@ -31,9 +30,10 @@ class Team extends Model
     {
         return $this->hasMany(Player::class);
     }
-    public function competition(): BelongsTo
+
+    public function registrations(): HasMany
     {
-        return $this->belongsTo(Competition::class);
+        return $this->hasMany(\App\Models\Registration::class);
     }
 
     public function groups(): BelongsToMany

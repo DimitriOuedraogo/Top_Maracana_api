@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Player extends Model
@@ -30,6 +31,12 @@ class Player extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function registrations(): BelongsToMany
+    {
+        return $this->belongsToMany(Registration::class, 'registration_players')
+                    ->withTimestamps();
     }
 
     public function cards(): HasMany

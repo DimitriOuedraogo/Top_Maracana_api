@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Events\MatchEventAdded;
+use App\Events\ScoreUpdated;
 use App\Models\Competition;
 use App\Models\GameMatch;
 use App\Models\MatchResult;
@@ -78,6 +80,12 @@ class MatchService
             $result->increment('away_score');
         }
 
+        broadcast(new MatchEventAdded($matchId, $match->competition_id, 'goal', [
+            'player_id'   => $data['player_id'],
+            'player_name' => $player->full_name,
+            'minute'      => $data['minute'],
+        ]))->toOthers();
+
         return [
             'message' => 'But ajouté avec succès.',
             'scorer' => $player->full_name,
@@ -131,6 +139,13 @@ class MatchService
             'minute' => $data['minute'],
         ]);
 
+        broadcast(new MatchEventAdded($matchId, $match->competition_id, 'card', [
+            'player_id'   => $data['player_id'],
+            'player_name' => $player->full_name,
+            'card_type'   => $data['card_type'],
+            'minute'      => $data['minute'],
+        ]))->toOthers();
+
         return [
             'message' => 'Carton ajouté avec succès.',
             'card' => $card->load('player'),
@@ -171,6 +186,8 @@ class MatchService
 
         // Passer le match à "played"
         $match->update(['status' => 'played']);
+        broadcast(new ScoreUpdated($match->load('result')))->toOthers();
+
         if ($match->round_type === 'final') {
             $result = $match->result;
             $homeScore = $result->home_score;

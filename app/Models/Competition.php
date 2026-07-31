@@ -49,7 +49,21 @@ class Competition extends Model
         'is_verified',
         'created_at',
         'updated_at',
+        'poster_image',
     ];
+
+    protected $appends = ['poster_url'];
+
+    public function getPosterUrlAttribute(): ?string
+    {
+        if (!$this->poster_image) {
+            return null;
+        }
+        $base = app()->runningInConsole()
+            ? rtrim(config('app.url'), '/')
+            : rtrim(request()->getSchemeAndHttpHost(), '/');
+        return $base . '/storage/' . $this->poster_image;
+    }
 
     public function organizer(): BelongsTo
     {

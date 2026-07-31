@@ -40,7 +40,7 @@ class CompetitionService
     public function create(array $data): array
     {
         $data['organizer_id'] = Auth::id();
-        $data['status'] = 'registration_open';
+        $data['status'] = 'draft';
 
         // Gestion de l'image poster
         if (isset($data['poster_image'])) {
@@ -126,9 +126,76 @@ class CompetitionService
         return ['message' => 'Compétition supprimée avec succès.'];
     }
 
+    public function publish(string $id): array
+    {
+        $competition = $this->competitionRepository->findById($id);
+
+        if (!$competition) {
+            throw new \Exception('Compétition introuvable.', 404);
+        }
+
+        if ($competition->organizer_id !== Auth::id()) {
+            throw new \Exception('Action non autorisée.', 403);
+        }
+
+        if ($competition->status !== 'draft') {
+            throw new \Exception('Seules les compétitions en brouillon peuvent être publiées.', 400);
+        }
+
+        $competition = $this->competitionRepository->update($competition, ['status' => 'registration_open']);
+
+        return ['competition' => $competition];
+    }
+
+    public function updatePoster(string $id, $file): array
+    {
+        $competition = $this->competitionRepository->findById($id);
+
+        if (!$competition) {
+            throw new \Exception('Compétition introuvable.', 404);
+        }
+
+        if ($competition->organizer_id !== Auth::id()) {
+            throw new \Exception('Action non autorisée.', 403);
+        }
+
+        if ($competition->poster_image) {
+            Storage::disk('public')->delete($competition->poster_image);
+        }
+
+        $competition = $this->competitionRepository->update($competition, [
+            'poster_image' => $this->uploadPoster($file),
+        ]);
+
+        return ['competition' => $competition];
+    }
+
     private function uploadPoster($file): string
     {
         return $file->store('competitions/posters', 'public');
+    }
+
+    public function getApprovedTeams(string $id): array
+    {
+        $competition = \App\Models\Competition::find($id);
+
+        if (!$competition) {
+            throw new \Exception('Compétition introuvable.', 404);
+        }
+
+        $teams = \App\Models\Registration::where('competition_id', $id)
+            ->where('status', 'approved')
+            ->with(['team.players'])
+            ->get()
+            ->pluck('team');
+
+        return [
+            'competition' => $competition->name,
+            'status'      => $competition->status,
+            'approved_count' => $teams->count(),
+            'max_teams'   => $competition->max_teams,
+            'teams'       => $teams,
+        ];
     }
 
     public function getKnockoutMatches(string $id): array

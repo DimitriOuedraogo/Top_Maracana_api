@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\CompetitionFull;
+use App\Events\CompetitionLaunched;
 use App\Services\GroupService;
 use App\Services\MatchService;
 use Illuminate\Support\Collection;
@@ -38,6 +39,7 @@ class GenerateGroupsAndMatches
 
         // 3. Passer le status à ongoing
         $competition->update(['status' => 'ongoing']);
+        broadcast(new CompetitionLaunched($competition->fresh()))->toOthers();
 
         \Log::info('Status mis à jour: ongoing');
     }

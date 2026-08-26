@@ -22,10 +22,11 @@ class TeamValidated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'registration_id' => $this->registration->id,
-            'competition_id'  => $this->registration->competition_id,
-            'team_id'         => $this->registration->team_id,
-            'status'          => 'approved',
+            'registration_id'  => $this->registration->id,
+            'competition_id'   => $this->registration->competition_id,
+            'competition_name' => $this->registration->competition->name,
+            'team_id'          => $this->registration->team_id,
+            'status'           => 'approved',
         ];
     }
 

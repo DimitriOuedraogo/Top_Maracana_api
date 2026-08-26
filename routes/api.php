@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CompetitionController;
 use App\Http\Controllers\RegistrationController;
@@ -22,7 +23,8 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:api')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::post('/refresh', [AuthController::class, 'refresh']);
-        Route::get('/me', action: [AuthController::class, 'me']);
+        Route::get('/me', [AuthController::class, 'me']);
+        Route::patch('/device-token', [AuthController::class, 'updateDeviceToken']);
     });
 });
 
@@ -86,6 +88,14 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/competitions/{id}/registrations', [RegistrationController::class, 'index']);
     Route::patch('/registrations/{id}/approve', [RegistrationController::class, 'approve']);
     Route::patch('/registrations/{id}/reject', [RegistrationController::class, 'reject']);
+});
+
+// ── Notifications ─────────────────────────────────────────
+Route::middleware('auth:api')->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllRead']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 });
 
 Route::get('/ping', function () {

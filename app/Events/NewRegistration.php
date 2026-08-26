@@ -8,7 +8,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class TeamRejected implements ShouldBroadcast
+class NewRegistration implements ShouldBroadcast
 {
     use Dispatchable, SerializesModels;
 
@@ -16,22 +16,31 @@ class TeamRejected implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        return [new PrivateChannel('team.' . $this->registration->team_id)];
+        return [
+            new PrivateChannel('organizer.' . $this->registration->competition->organizer_id),
+        ];
     }
 
     public function broadcastWith(): array
     {
+        $team = $this->registration->team;
+
         return [
             'registration_id'  => $this->registration->id,
             'competition_id'   => $this->registration->competition_id,
-            'competition_name' => $this->registration->competition->name,
-            'team_id'          => $this->registration->team_id,
-            'status'           => 'rejected',
+            'status'           => 'pending',
+            'received_at'      => $this->registration->created_at,
+            'team' => [
+                'id'             => $team->id,
+                'name'           => $team->name,
+                'logo'           => $team->logo,
+                'players_count'  => $this->registration->players()->count(),
+            ],
         ];
     }
 
     public function broadcastAs(): string
     {
-        return 'TeamRejected';
+        return 'NewRegistration';
     }
 }

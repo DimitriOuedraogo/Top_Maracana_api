@@ -11,6 +11,7 @@ use App\Http\Requests\VerifyResetCodeRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 /**
  * @OA\Info(
@@ -436,6 +437,13 @@ class AuthController extends Controller
         } catch (\Exception $e) {
             return $this->handleException($e);
         }
+    }
+
+    public function updateDeviceToken(Request $request): JsonResponse
+    {
+        $request->validate(['fcm_token' => 'required|string']);
+        $request->user()->update(['fcm_token' => $request->fcm_token]);
+        return response()->json(['success' => true, 'message' => 'Token enregistré.']);
     }
 
     private function handleException(\Exception $e): JsonResponse

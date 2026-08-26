@@ -7,7 +7,8 @@ use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use App\Models\Team;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Models\AppNotification;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class User extends Authenticatable implements JWTSubject
@@ -28,6 +29,7 @@ class User extends Authenticatable implements JWTSubject
         'email_verification_expires_at',
         'password_reset_code',
         'password_reset_expires_at',
+        'fcm_token',
     ];
 
     protected $hidden = [
@@ -82,8 +84,13 @@ class User extends Authenticatable implements JWTSubject
         return !is_null($this->email_verified_at);
     }
 
-    public function team(): HasOne
+    public function teams(): HasMany
     {
-        return $this->hasOne(Team::class, 'manager_id');
+        return $this->hasMany(Team::class, 'manager_id');
+    }
+
+    public function inAppNotifications(): HasMany
+    {
+        return $this->hasMany(AppNotification::class);
     }
 }

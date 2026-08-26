@@ -11,5 +11,9 @@ Broadcast::channel('match.{matchId}', function () {
 });
 
 Broadcast::channel('team.{teamId}', function ($user, $teamId) {
-    return $user->team && $user->team->id === $teamId;
+    return $user->teams()->where('id', $teamId)->exists();
+});
+
+Broadcast::channel('organizer.{organizerId}', function ($user, $organizerId) {
+    return $user->id === $organizerId;
 });

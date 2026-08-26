@@ -129,20 +129,24 @@ Authorization: Bearer <token>
 | POST | `/api/auth/logout` | ✅ | Déconnexion |
 | POST | `/api/auth/refresh` | ✅ | Rafraîchir le token |
 | GET | `/api/auth/me` | ✅ | Profil connecté |
+| PATCH | `/api/auth/device-token` | ✅ | Enregistrer le token FCM |
 
 ### Compétitions
 
 | Méthode | Endpoint | Auth | Description |
 |---------|----------|------|-------------|
-| GET | `/api/competitions` | — | Liste des compétitions |
+| GET | `/api/competitions` | — | Liste des compétitions publiques |
 | GET | `/api/competitions/{id}` | — | Détails |
 | GET | `/api/competitions/{id}/groups` | — | Groupes et équipes |
 | GET | `/api/competitions/{id}/matches` | — | Matchs par semaine |
 | GET | `/api/competitions/{id}/knockout` | — | Phase knockout |
 | GET | `/api/competitions/{id}/statistics` | — | Statistiques |
-| GET | `/api/competitions/my` | ✅ | Mes compétitions |
+| GET | `/api/competitions/{id}/teams` | — | Équipes approuvées |
+| GET | `/api/competitions/my` | ✅ | Mes compétitions (organisateur) |
 | POST | `/api/competitions` | ✅ | Créer |
 | POST | `/api/competitions/{id}` | ✅ | Modifier |
+| POST | `/api/competitions/{id}/publish` | ✅ | Publier (draft → registration_open) |
+| POST | `/api/competitions/{id}/poster` | ✅ | Uploader l'affiche |
 | DELETE | `/api/competitions/{id}` | ✅ | Supprimer |
 | POST | `/api/competitions/{id}/generate-knockout` | ✅ | Générer le knockout |
 | POST | `/api/competitions/{id}/next-round` | ✅ | Prochain tour knockout |
@@ -153,10 +157,19 @@ Authorization: Bearer <token>
 |---------|----------|------|-------------|
 | GET | `/api/teams` | — | Liste des équipes |
 | GET | `/api/teams/{id}` | — | Détails |
-| GET | `/api/teams/my` | ✅ | Mes équipes |
-| POST | `/api/teams` | ✅ | Créer |
+| GET | `/api/teams/my` | ✅ | Mes équipes avec inscriptions |
+| POST | `/api/teams` | ✅ | Créer une équipe |
 | POST | `/api/teams/{id}` | ✅ | Modifier |
 | DELETE | `/api/teams/{id}` | ✅ | Supprimer |
+
+### Inscriptions
+
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| POST | `/api/competitions/{id}/register` | ✅ | Inscrire une équipe avec sélection de joueurs |
+| GET | `/api/competitions/{id}/registrations` | ✅ | Liste des inscriptions (organisateur) |
+| PATCH | `/api/registrations/{id}/approve` | ✅ | Approuver une inscription |
+| PATCH | `/api/registrations/{id}/reject` | ✅ | Refuser une inscription |
 
 ### Groupes
 
@@ -281,8 +294,127 @@ php artisan test
 | Laravel | 12 | Framework |
 | tymon/jwt-auth | ^2.2 | Authentification JWT |
 | darkaonline/l5-swagger | ^8.6 | Documentation Swagger |
+| Laravel Reverb | — | Serveur WebSocket (port 8080) |
 | MySQL | — | Base de données |
 | Vite | 7.x | Build des assets |
 | Tailwind CSS | 4.x | Styles frontend |
 | Axios | 1.x | Requêtes HTTP |
 | PHPUnit | — | Tests unitaires |
+
+---
+
+## Changelog
+
+### 2026-08-03 — Notifications push FCM (Firebase Cloud Messaging)
+
+**`PATCH /auth/device-token` — Nouveau endpoint pour enregistrer le token FCM**
+- Raison : pour envoyer des notifications push sur le téléphone de l'utilisateur, le backend a besoin de son FCM token généré par l'app Flutter au démarrage.
+- Body : `{ "fcm_token": "string" }` — Auth JWT requise.
+- Fichier : `app/Http/Controllers/AuthController.php`, `routes/api.php`.
+
+**Colonne `fcm_token` ajoutée sur la table `users`**
+- Fichier : `database/migrations/2026_08_03_130746_add_fcm_token_to_users_table.php`.
+
+**`FcmService` — Service d'envoi de notifications via l'API FCM HTTP v1**
+- Utilise `google/auth` (OAuth2) pour obtenir un access token depuis le fichier de credentials Firebase (`storage/app/firebase-credentials.json`).
+- Raison du choix HTTP v1 direct : le package `kreait/laravel-firebase` n'est pas compatible avec PHP 8.2 (requiert PHP 8.3+).
+- Les erreurs Firebase n'interrompent pas la réponse API (try/catch + log).
+- Fichier : `app/Services/FcmService.php`, `config/services.php`.
+
+**3 notifications push déclenchées automatiquement**
+- Nouvelle inscription → notifie l'**organisateur** : `"[Équipe] vient de s'inscrire à [Compétition]"`
+- Inscription approuvée → notifie le **manager** : `"Votre équipe est validée pour [Compétition]"`
+- Inscription refusée → notifie le **manager** : `"Votre inscription à [Compétition] a été refusée"`
+- Fichier : `app/Services/RegistrationService.php`.
+
+**Variables d'environnement ajoutées**
+```env
+FIREBASE_CREDENTIALS=firebase-credentials.json
+FIREBASE_PROJECT_ID=maracana-app-14b85
+```
+
+---
+
+### 2026-08-03 — Correction re-inscription après refus (500 → UPDATE)
+
+**`POST /competitions/{id}/register` — Re-inscription possible après un refus**
+- Avant : une inscription refusée (`status = rejected`) restait en base. Si l'équipe tentait de se réinscrire, un `INSERT` sur la même paire `(competition_id, team_id)` violait la contrainte `UNIQUE` → erreur 500.
+- Après : le backend détecte l'inscription rejetée existante et fait un `UPDATE status = 'pending'` + `sync()` des nouveaux joueurs au lieu d'un `INSERT`.
+- `sync()` remplace aussi les anciens joueurs dans la table `registration_players`, évitant un doublon dans la pivot.
+- Fichier : `app/Services/RegistrationService.php`.
+
+---
+
+### 2026-08-01 — Temps réel organisateur, upload affiche, corrections
+
+**`POST /competitions/{id}/poster` — Nouveau endpoint d'upload d'affiche**
+- Avant : modifier une compétition via `POST /competitions/{id}` re-validait tous les champs obligatoires, impossible d'envoyer juste l'image.
+- Après : endpoint dédié qui accepte uniquement `poster_image` en `multipart/form-data`.
+- Fichier : `app/Http/Controllers/CompetitionController.php`, `app/Services/CompetitionService.php`, `app/Http/Requests/Competitions/UploadPosterRequest.php`.
+
+**URL des affiches (`poster_url`) — Dynamique selon le host de la requête**
+- Avant : `APP_URL` (défini à `http://localhost` dans `.env`) était utilisé pour construire l'URL de l'affiche, ce qui retournait des URLs inaccessibles depuis ngrok ou un autre domaine.
+- Après : `request()->getSchemeAndHttpHost()` est utilisé à la place, l'URL s'adapte automatiquement à l'hôte de la requête (ngrok, production, localhost).
+- Fichier : `app/Models/Competition.php` → `getPosterUrlAttribute()`.
+
+**`NewRegistration` — Événement temps réel lors d'une inscription d'équipe**
+- Raison : l'organisateur doit être notifié immédiatement quand une équipe soumet une demande d'inscription, sans avoir à rafraîchir manuellement.
+- Fonctionnement : à chaque appel réussi de `POST /competitions/{id}/register`, un événement est broadcasté sur le canal privé `private-organizer.{organizer_id}` via Laravel Reverb.
+- Fichier : `app/Events/NewRegistration.php` (créé), `app/Services/RegistrationService.php`.
+
+**`channels.php` — Correction de l'autorisation du canal `private-team.{id}`**
+- Avant : `$user->team` utilisait une relation `hasOne` — seul le premier manager d'une équipe était reconnu, et un manager avec plusieurs équipes était refusé sur les autres.
+- Après : `$user->teams()->where('id', $teamId)->exists()` — fonctionne pour n'importe quel nombre d'équipes.
+- Ajout du canal `private-organizer.{organizerId}` pour les notifications d'inscription en temps réel.
+- Fichier : `routes/channels.php`.
+
+**`User::team()` → `User::teams()` — Relation corrigée**
+- Raison : un manager peut gérer plusieurs équipes. La relation `hasOne` était incorrecte et bloquait l'autorisation des canaux WebSocket.
+- Changement : `hasOne(Team::class, 'manager_id')` → `hasMany(Team::class, 'manager_id')`.
+- Fichier : `app/Models/User.php`.
+
+**`GET /teams/my` — Correction de l'ordre des routes (404)**
+- Avant : la route `GET /teams/{id}` était enregistrée avant `GET /teams/my`, Laravel interprétait donc `"my"` comme un UUID et retournait "Équipe introuvable".
+- Après : le groupe authentifié contenant `GET /teams/my` est déclaré avant la route publique `GET /teams/{id}`.
+- Fichier : `routes/api.php`.
+
+**`GET /teams/my` — Réponse enrichie avec inscriptions et joueurs sélectionnés**
+- Raison : le mobile a besoin de savoir dans quelles compétitions chaque équipe est inscrite et quels joueurs ont été sélectionnés pour chaque inscription.
+- La réponse inclut maintenant : `registrations[].competition`, `registrations[].players` (sélection par compétition), `registrations[].status`.
+- Fichier : `app/Services/TeamService.php` → `getMyTeams()`.
+
+---
+
+### 2026-07-31 — Table pivot `registration_players` et sélection de joueurs par inscription
+
+**Nouvelle table `registration_players`**
+- Raison : lors d'une inscription à une compétition, l'équipe doit sélectionner exactement `players_per_team` joueurs parmi son effectif. Cette sélection est spécifique à chaque inscription (pas identique d'une compétition à l'autre).
+- La table `registration_players` stocke le lien entre une inscription et les joueurs sélectionnés.
+- Fichier : `database/migrations/2026_07_31_000001_create_registration_players_table.php`.
+
+**`POST /competitions/{id}/register` — Champ `player_ids` requis**
+- Avant : l'inscription enregistrait toute l'équipe sans distinction de joueurs.
+- Après : le manager doit envoyer `player_ids` (tableau d'UUIDs) pour sélectionner exactement les joueurs qui participeront.
+- Validations ajoutées : nombre exact de joueurs = `players_per_team`, tous les joueurs appartiennent à l'équipe, exactement 1 gardien dans la sélection, âges dans les limites de la compétition.
+- Fichier : `app/Services/RegistrationService.php`, `app/Http/Controllers/RegistrationController.php`.
+
+**Relations ajoutées : `Registration::players()` et `Player::registrations()`**
+- Fichiers : `app/Models/Registration.php`, `app/Models/Player.php`.
+
+---
+
+### 2026-07-20 — Découplement des équipes et des compétitions
+
+**Suppression de `competition_id` de la table `teams`**
+- Avant : une équipe était directement liée à une seule compétition lors de sa création, ce qui empêchait de réutiliser une équipe dans plusieurs compétitions.
+- Après : une équipe est une entité indépendante. L'inscription à une compétition se fait séparément via `POST /competitions/{id}/register`.
+- Fichier : `database/migrations/2026_07_20_000001_remove_competition_id_from_teams_table.php`.
+
+**`POST /teams` — Simplification de la création d'équipe**
+- Avant : créer une équipe nécessitait un `competition_id` et validait les âges/slots de la compétition.
+- Après : on crée simplement l'équipe avec ses joueurs. Pas de lien à une compétition.
+- Fichiers : `app/Http/Requests/Teams/StoreTeamRequest.php`, `app/Services/TeamService.php`, `app/Repositories/TeamRepository.php`, `app/Models/Team.php`.
+
+**`POST /competitions/{id}/register` — Nouveau endpoint d'inscription**
+- Permet à un manager d'inscrire une de ses équipes à une compétition ouverte.
+- Fichier : `routes/api.php`, `app/Http/Controllers/RegistrationController.php`.
